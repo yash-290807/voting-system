@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>User Dashboard</title>
+
+    <style>
+        body {
+            font-family: Poppins;
+            background: #0f172a;
+            color: white;
+            padding: 40px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        
+        .candidate {
+            background: #334155;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        button {
+            padding: 8px 14px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #2563eb;
+        }
+        
+        .logout {
+            background: red;
+            margin-top: 30px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Online Voting Dashboard</h1>
+
+        <div id="electionsBox"></div>
+
+        <button class="logout" onclick="logout()">Logout</button>
+
+    </div>
+
+    <script>
+        const user_id = localStorage.getItem("user_id")
+
+        if (!user_id) {
+            alert("Please login first")
+            window.location = "login.html"
+        }
+
+        async function loadElections() {
+
+            const res = await fetch("../backend/elections/get_elections.php")
+
+            const elections = await res.json()
+
+            const box = document.getElementById("electionsBox")
+
+            box.innerHTML = ""
+
+            for (let e of elections) {
+
+                box.innerHTML += `
+<div class="card">
+
+<h2>${e.title}</h2>
+
+<div id="candidates_${e.id}">
+Loading candidates...
+</div>
+
+</div>
+`
+
+                loadCandidates(e.id)
+
+            }
+
+        }
+
+        async function loadCandidates(election_id) {
+
+            const user_id = localStorage.getItem("user_id");
+
+            const res = await fetch(`../backend/candidates/get_candidates.php?election_id=${election_id}&user_id=${user_id}`);
+            const data = await res.json()
+
+            const box = document.getElementById("candidates_" + election_id)
+
+            box.innerHTML = ""
+
+            if (data.length === 0) {
+
+                box.innerHTML = "<p>No candidates available</p>"
+                return
+
+            }
+
+            data.forEach(c => {
+
+                let voted = c.voted == 1
+
+                box.innerHTML += `
+
+<div class="candidate">
+
+<span>${c.name} - ${c.party}</span>
+
+<button 
+onclick="vote(${c.id},${election_id},this)"
+${voted ? "disabled" : ""}
+>
+
+${voted ? "Voted" : "Vote"}
+
+</button>
+
+</div>
+
+`
+
+            })
+
+        }
+
+        async function vote(candidate_id, election_id, btn) {
+
+            const res = await fetch("../backend/voting/vote.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    user_id: user_id,
+                    candidate_id: candidate_id,
+                    election_id: election_id
+                })
+
+            })
+
+            const data = await res.json()
+
+            alert(data.message)
+
+            if (data.message.includes("success")) {
+
+                btn.innerText = "Voted"
+                btn.disabled = true
+
+            }
+
+        }
+
+        function logout() {
+
+            localStorage.clear()
+            window.location = "login.html"
+
+        }
+
+        loadElections()
+    </script>
+
+</body>
+
+</html>

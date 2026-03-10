@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Election Results</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #0b1a33;
+            color: white;
+            font-family: Arial;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        
+        #chartContainer {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        button {
+            margin-top: 25px;
+            padding: 10px 20px;
+            background: #e74a3b;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Election Results</h1>
+
+    <div class="container">
+
+        <div id="chartContainer">
+            <canvas id="chart"></canvas>
+        </div>
+
+        <button onclick="logout()">Logout</button>
+
+    </div>
+
+    <script>
+        if (localStorage.getItem("role") !== "ec") {
+            alert("Access denied")
+            window.location = "login.html"
+        }
+
+        let chart;
+
+        async function loadResults() {
+
+            const res = await fetch("../backend/voting/results.php")
+
+            const data = await res.json()
+
+            const names = []
+            const votes = []
+
+            data.forEach(c => {
+                names.push(c.name)
+                votes.push(Number(c.votes))
+            })
+
+            if (chart) {
+                chart.destroy()
+            }
+
+            const ctx = document.getElementById("chart").getContext("2d")
+
+            chart = new Chart(ctx, {
+
+                type: "bar",
+
+                data: {
+                    labels: names,
+                    datasets: [{
+                        label: "Votes",
+                        data: votes,
+                        backgroundColor: "#4e73df"
+                    }]
+                },
+
+                options: {
+
+                    indexAxis: "y",
+
+                    responsive: true,
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+
+                }
+
+            })
+
+        }
+
+        function logout() {
+            localStorage.removeItem("role")
+            window.location = "login.html"
+        }
+
+        loadResults()
+
+        setInterval(loadResults, 5000)
+    </script>
+
+</body>
+
+</html>

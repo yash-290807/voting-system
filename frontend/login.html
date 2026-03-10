@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Secure Voting Login</title>
+
+    <style>
+        body {
+            font-family: Poppins;
+            background: linear-gradient(135deg, #4e73df, #1cc88a);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            width: 420px;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: #4e73df;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        
+        button:hover {
+            background: #2e59d9;
+        }
+        
+        .register {
+            background: #22c55e;
+        }
+        
+        .register:hover {
+            background: #16a34a;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #video {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 6px solid #00ff88;
+            margin-top: 10px;
+            object-fit: cover;
+        }
+        
+        #fingerprintVideo {
+            width: 220px;
+            margin-top: 15px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px #00ffcc;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>Secure Voting Login</h2>
+
+        <!-- ROLE SELECTION -->
+
+        <div id="roleSelect">
+
+            <button onclick="selectRole('user')">Voter Login</button>
+
+            <button class="register" onclick="goRegister()">Register New Voter</button>
+
+            <button onclick="selectRole('admin')">Admin Login</button>
+
+            <button onclick="selectRole('officer')">Election Officer Login</button>
+
+        </div>
+
+
+        <!-- OTP -->
+
+        <div id="otpBox" class="hidden">
+
+            <h3>Phone Verification</h3>
+
+            <input id="phone" placeholder="Phone Number">
+
+            <input id="otp" placeholder="Enter OTP">
+
+            <button onclick="sendOTP()">Send OTP</button>
+
+            <button onclick="verifyOTP()">Verify OTP</button>
+
+        </div>
+
+
+        <!-- ACCESS CODE -->
+
+        <div id="accessCodeBox" class="hidden">
+
+            <h3>Enter Access Code</h3>
+
+            <input id="accessCode" placeholder="Access Code">
+
+            <button onclick="verifyAccess()">Unlock Login</button>
+
+        </div>
+
+
+        <!-- LOGIN FORM -->
+
+        <div id="loginForm" class="hidden">
+
+            <input id="email" placeholder="Email">
+
+            <input id="password" type="password" placeholder="Password">
+
+            <button onclick="emailLogin()">Verify Email</button>
+
+            <hr>
+
+            <button onclick="startFace()">Face Verification</button>
+
+            <div id="cameraBox" class="hidden">
+                <video id="video" autoplay></video>
+            </div>
+
+            <hr>
+
+            <button onclick="startFingerprint()">Scan Fingerprint</button>
+
+            <div id="fingerprintBox" class="hidden">
+
+                <video id="fingerprintVideo" autoplay muted loop>
+<source src="https://videos.pond5.com/fingerprint-scan-icon-animation-white-footage-132709791_main_xxl.mp4" type="video/mp4">
+</video>
+
+                <p>Scanning fingerprint...</p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+        let role = ""
+        let loginVerified = false
+        let generatedOTP = ""
+
+        /* REGISTER BUTTON */
+
+        function goRegister() {
+            window.location = "register.html"
+        }
+
+        /* ROLE SELECTION */
+
+        function selectRole(r) {
+
+            role = r
+
+            document.getElementById("roleSelect").style.display = "none"
+
+            if (role === "user") {
+                document.getElementById("loginForm").classList.remove("hidden")
+            } else {
+                document.getElementById("otpBox").classList.remove("hidden")
+            }
+
+        }
+
+
+        /* SEND OTP */
+
+        async function sendOTP() {
+
+            const phone = document.getElementById("phone").value
+
+            if (!phone) {
+                alert("Enter phone number")
+                return
+            }
+
+            const res = await fetch("../backend/auth/send_otp.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    phone
+                })
+            })
+
+            const data = await res.json()
+
+            generatedOTP = data.otp
+
+            alert("OTP: " + generatedOTP)
+
+        }
+
+
+        /* VERIFY OTP */
+
+        function verifyOTP() {
+
+            const entered = document.getElementById("otp").value
+
+            if (entered === generatedOTP) {
+
+                alert("OTP Verified")
+
+                document.getElementById("otpBox").style.display = "none"
+                document.getElementById("accessCodeBox").classList.remove("hidden")
+
+            } else {
+
+                alert("Wrong OTP")
+
+            }
+
+        }
+
+
+        /* ACCESS CODE */
+
+        function verifyAccess() {
+
+            const code = document.getElementById("accessCode").value
+
+            if (role === "admin" && code === "ADMIN123") {
+                unlockLogin()
+            } else if (role === "officer" && code === "EC2026") {
+                unlockLogin()
+            } else {
+                alert("Invalid access code")
+            }
+
+        }
+
+        function unlockLogin() {
+
+            document.getElementById("accessCodeBox").style.display = "none"
+            document.getElementById("loginForm").classList.remove("hidden")
+
+        }
+
+
+        /* EMAIL LOGIN */
+
+        async function emailLogin() {
+
+            const email = document.getElementById("email").value
+            const password = document.getElementById("password").value
+
+            if (!email || !password) {
+                alert("Enter email and password")
+                return
+            }
+
+            /* if role not selected assume voter */
+
+            if (role === "") {
+                role = "user"
+            }
+
+            let url = "../backend/auth/login.php"
+
+            if (role === "officer") {
+                url = "../backend/auth/officer_login.php"
+            }
+
+            try {
+
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                })
+
+                const data = await res.json()
+
+                if (data.message === "Login successful") {
+
+                    loginVerified = true
+
+                    localStorage.setItem("user_id", data.user_id)
+                    localStorage.setItem("role", role)
+
+                    alert("Email verified successfully")
+
+                } else {
+
+                    alert(data.message)
+
+                }
+
+            } catch (error) {
+
+                alert("Server connection failed")
+
+            }
+
+        }
+
+        /* FACE VERIFY */
+
+        async function startFace() {
+
+            if (!loginVerified) {
+                alert("Verify email first")
+                return
+            }
+
+            const video = document.getElementById("video")
+
+            document.getElementById("cameraBox").classList.remove("hidden")
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true
+            })
+
+            video.srcObject = stream
+
+            setTimeout(() => {
+
+                alert("Face verified")
+
+            }, 3000)
+
+        }
+
+
+        /* FINGERPRINT */
+
+        function startFingerprint() {
+
+            if (!loginVerified) {
+                alert("Verify email first")
+                return
+            }
+
+            document.getElementById("fingerprintBox").classList.remove("hidden")
+
+            setTimeout(() => {
+
+                alert("Fingerprint verified")
+
+                if (role === "admin")
+                    window.location = "admin/dashboard.html"
+
+                else if (role === "officer")
+                    window.location = "officer/dashboard.html"
+
+                else
+                    window.location = "dashboard.html"
+
+            }, 3500)
+
+        }
+    </script>
+
+</body>
+
+</html>

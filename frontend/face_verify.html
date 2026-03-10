@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Face Verification</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #111;
+            color: white;
+            flex-direction: column;
+        }
+        
+        video {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 5px solid #00ff88;
+        }
+        
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            background: #00ff88;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h2>Face Verification Required</h2>
+
+    <video id="video" autoplay></video>
+
+    <button onclick="verify()">Verify Face</button>
+
+    <script>
+        const video = document.getElementById("video")
+
+        navigator.mediaDevices.getUserMedia({
+                video: true
+            })
+            .then(stream => {
+                video.srcObject = stream
+            })
+
+        function verify() {
+
+            alert("Face Verified Successfully")
+
+            window.location = "../frontend/dashboard.html"
+
+        }
+    </script>
+
+</body>
+
+</html>

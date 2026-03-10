@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add Candidate</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <h2>Add Candidate</h2>
+
+    <input id="name" placeholder="Candidate Name"><br><br>
+    <input id="party" placeholder="Party Name"><br><br>
+    <input id="election" placeholder="Election ID"><br><br>
+
+    <button type="button" onclick="addCandidate()">Add Candidate</button>
+
+    <p id="msg"></p>
+
+    <script>
+        async function addCandidate() {
+
+            const name = document.getElementById("name").value
+            const party = document.getElementById("party").value
+            const election = document.getElementById("election").value
+
+            const res = await fetch("../backend/elections/add_candidate.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    name: name,
+                    party: party,
+                    election_id: election
+                })
+
+            })
+
+            const data = await res.json()
+
+            document.getElementById("msg").innerText = data.message
+
+        }
+    </script>
+
+</body>
+
+</html>

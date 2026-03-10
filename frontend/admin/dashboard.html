@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        body {
+            font-family: Poppins;
+            background: #f4f6f9;
+            padding: 40px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            margin-bottom: 10px;
+        }
+        
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        button {
+            padding: 10px;
+            width: 100%;
+            background: #4e73df;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #2e59d9;
+        }
+        
+        .card {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Admin Dashboard</h1>
+
+        <hr>
+
+        <h2>Create Election</h2>
+
+        <input id="title" placeholder="Election Title">
+
+        <input id="start" type="datetime-local">
+
+        <input id="end" type="datetime-local">
+
+        <button onclick="createElection()">Create Election</button>
+
+        <hr>
+
+        <h2>Add Candidate</h2>
+
+        <select id="electionSelect" onchange="loadCandidates()"></select>
+
+        <input id="candidateName" placeholder="Candidate Name">
+
+        <input id="partyName" placeholder="Party Name">
+
+        <button onclick="addCandidate()">Add Candidate</button>
+
+        <hr>
+
+        <h2>Candidates List</h2>
+
+        <div id="candidatesList"></div>
+
+    </div>
+
+    <script>
+        async function loadElections() {
+
+            const res = await fetch("../../backend/elections/get_elections.php")
+
+            const elections = await res.json()
+
+            const select = document.getElementById("electionSelect")
+
+            select.innerHTML = ""
+
+            elections.forEach(e => {
+                select.innerHTML += `<option value="${e.id}">${e.title}</option>`
+            })
+
+            loadCandidates()
+
+        }
+
+        async function createElection() {
+
+            const title = document.getElementById("title").value
+            const start = document.getElementById("start").value
+            const end = document.getElementById("end").value
+
+            await fetch("../../backend/elections/create_election.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    title,
+                    start_time: start,
+                    end_time: end
+                })
+
+            })
+
+            alert("Election created")
+
+            loadElections()
+
+        }
+
+        async function addCandidate() {
+
+            const election_id = document.getElementById("electionSelect").value
+            const name = document.getElementById("candidateName").value
+            const party = document.getElementById("partyName").value
+
+            await fetch("../../backend/candidates/add_candidate.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    election_id,
+                    name,
+                    party
+                })
+
+            })
+
+            alert("Candidate added")
+
+            loadCandidates()
+
+        }
+
+        async function loadCandidates() {
+
+            const election_id = document.getElementById("electionSelect").value
+
+            if (!election_id) return
+
+            const res = await fetch(`../../backend/candidates/get_candidates.php?election_id=${election_id}`)
+
+            const data = await res.json()
+
+            const box = document.getElementById("candidatesList")
+
+            box.innerHTML = ""
+
+            if (data.length === 0) {
+
+                box.innerHTML = "<p>No candidates added for this election.</p>"
+                return
+
+            }
+
+            data.forEach(c => {
+
+                box.innerHTML += `
+
+<div class="card">
+
+<b>${c.name}</b> - ${c.party}
+
+<button onclick="deleteCandidate(${c.id})">Delete</button>
+
+</div>
+
+`
+
+            })
+
+        }
+
+        async function deleteCandidate(id) {
+
+            await fetch("../../backend/candidates/delete_candidate.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    candidate_id: id
+                })
+
+            })
+
+            alert("Candidate deleted")
+
+            loadCandidates()
+
+        }
+
+        loadElections()
+    </script>
+
+</body>
+
+</html>

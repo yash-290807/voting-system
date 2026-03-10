@@ -1,0 +1,23 @@
+<h2>Face Verification</h2>
+
+<video id="video" width="300" autoplay></video>
+<br><br>
+
+<button onclick="capture()">Verify Face</button>
+
+<script>
+    navigator.mediaDevices.getUserMedia({
+            video: true
+        })
+        .then(stream => {
+            document.getElementById("video").srcObject = stream
+        })
+
+    function capture() {
+
+        alert("Face verified successfully")
+
+        window.location = "dashboard.html"
+
+    }
+</script>

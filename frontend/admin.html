@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body {
+            background: #0b1a33;
+            color: white;
+            font-family: Arial;
+            padding: 40px;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        
+        .card {
+            background: #142850;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: none;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .add {
+            background: #1cc88a;
+            color: white;
+        }
+        
+        .start {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .stop {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .logout {
+            background: #e74a3b;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Admin Dashboard</h1>
+
+        <!-- Add Candidate -->
+
+        <div class="card">
+
+            <h2>Add Candidate</h2>
+
+            <input id="name" placeholder="Candidate Name">
+
+            <input id="party" placeholder="Party Name">
+
+            <button class="add" onclick="addCandidate()">
+Add Candidate
+</button>
+
+        </div>
+
+        <!-- Candidate List -->
+
+        <div class="card">
+
+            <h2>Candidate List</h2>
+
+            <div id="candidates"></div>
+
+        </div>
+
+        <!-- Election Control -->
+
+        <div class="card">
+
+            <h2>Election Control</h2>
+
+            <button class="start" onclick="startElection()">
+Start Election
+</button>
+
+            <button class="stop" onclick="stopElection()">
+Stop Election
+</button>
+
+        </div>
+
+        <button class="logout" onclick="logout()">Logout</button>
+
+    </div>
+
+    <script src="js/admin.js"></script>
+
+    <script>
+        async function startElection() {
+
+            await fetch("../backend/elections/update_status.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    status: "running"
+                })
+
+            })
+
+            alert("Election Started")
+
+        }
+
+        async function stopElection() {
+
+            await fetch("../backend/elections/update_status.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    status: "stopped"
+                })
+
+            })
+
+            alert("Election Stopped")
+
+        }
+    </script>
+
+</body>
+
+</html>

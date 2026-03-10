@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Secure Voting Registration</title>
+
+    <style>
+        body {
+            font-family: Poppins;
+            background: linear-gradient(135deg, #4e73df, #1cc88a);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            width: 420px;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: #4e73df;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #2e59d9;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #video {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 6px solid #00ff88;
+            margin-top: 10px;
+        }
+        
+        #fingerprintVideo {
+            width: 220px;
+            margin-top: 15px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px #00ffcc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>Secure Voter Registration</h2>
+
+
+        <!-- BASIC DETAILS -->
+
+        <div id="accountBox">
+
+            <input id="email" placeholder="Email">
+
+            <input id="password" type="password" placeholder="Password">
+
+            <input id="phone" placeholder="Phone Number">
+
+            <button onclick="sendOTP()">Send OTP</button>
+
+        </div>
+
+
+        <!-- OTP -->
+
+        <div id="otpBox" class="hidden">
+
+            <input id="otp" placeholder="Enter OTP">
+
+            <button onclick="verifyOTP()">Verify OTP</button>
+
+        </div>
+
+
+        <!-- AADHAAR -->
+
+        <div id="aadharBox" class="hidden">
+
+            <input id="aadhar" placeholder="Enter Aadhaar Number">
+
+            <button onclick="verifyAadhar()">Verify Aadhaar</button>
+
+        </div>
+
+
+        <!-- VOTER ID -->
+
+        <div id="voterBox" class="hidden">
+
+            <input id="voterid" placeholder="Enter Voter ID (ABC1234567)">
+
+            <button onclick="verifyVoter()">Verify Voter ID</button>
+
+        </div>
+
+
+        <!-- FACE -->
+
+        <div id="faceBox" class="hidden">
+
+            <button onclick="startFace()">Face Verification</button>
+
+            <div id="cameraBox" class="hidden">
+
+                <video id="video" autoplay></video>
+
+            </div>
+
+        </div>
+
+
+        <!-- FINGERPRINT -->
+
+        <div id="fingerBox" class="hidden">
+
+            <button onclick="startFingerprint()">Scan Fingerprint</button>
+
+            <div id="fingerprintBox" class="hidden">
+
+                <video id="fingerprintVideo" autoplay muted loop>
+<source src="https://videos.pond5.com/fingerprint-scan-icon-animation-white-footage-132709791_main_xxl.mp4" type="video/mp4">
+</video>
+
+                <p>Scanning fingerprint...</p>
+
+            </div>
+
+        </div>
+
+        <p style="margin-top:10px">
+            Already registered?
+            <a href="login.html">Login</a>
+        </p>
+
+    </div>
+
+
+    <script>
+        let generatedOTP = Math.floor(100000 + Math.random() * 900000).toString()
+
+
+        function sendOTP() {
+
+            const email = document.getElementById("email").value
+            const password = document.getElementById("password").value
+            const phone = document.getElementById("phone").value
+
+            if (!email || !password || !phone) {
+                alert("Please fill all fields")
+                return
+            }
+
+            /* Generate random 6 digit OTP */
+
+            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString()
+
+            alert("OTP sent: " + generatedOTP)
+
+            document.getElementById("otpBox").classList.remove("hidden")
+
+        }
+
+
+
+        function verifyOTP() {
+
+            const otp = document.getElementById("otp").value
+
+            if (otp === generatedOTP) {
+
+                alert("OTP Verified")
+
+                document.getElementById("otpBox").style.display = "none"
+                document.getElementById("aadharBox").classList.remove("hidden")
+
+            } else {
+
+                alert("Invalid OTP")
+
+            }
+
+        }
+
+
+
+        function verifyAadhar() {
+
+            const aadhar = document.getElementById("aadhar").value
+
+            const regex = /^\d{12}$/
+
+            if (!regex.test(aadhar)) {
+                alert("Aadhaar must be exactly 12 digits")
+                return
+            }
+
+            alert("Aadhaar Verified")
+
+            document.getElementById("aadharBox").style.display = "none"
+            document.getElementById("voterBox").classList.remove("hidden")
+
+        }
+
+
+
+        function verifyVoter() {
+
+            const voter = document.getElementById("voterid").value
+
+            const regex = /^[A-Z]{3}[0-9]{7}$/
+
+            if (!regex.test(voter)) {
+                alert("Voter ID must be like ABC1234567")
+                return
+            }
+
+            alert("Voter ID Verified")
+
+            document.getElementById("voterBox").style.display = "none"
+            document.getElementById("faceBox").classList.remove("hidden")
+
+        }
+
+
+
+        async function startFace() {
+
+            const video = document.getElementById("video")
+
+            document.getElementById("cameraBox").classList.remove("hidden")
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true
+            })
+
+            video.srcObject = stream
+
+            setTimeout(() => {
+
+                alert("Face Verified")
+
+                document.getElementById("fingerBox").classList.remove("hidden")
+
+            }, 3000)
+
+        }
+
+
+
+        function startFingerprint() {
+
+            document.getElementById("fingerprintBox").classList.remove("hidden")
+
+            setTimeout(() => {
+
+                registerUser()
+
+            }, 3500)
+
+        }
+
+
+
+        async function registerUser() {
+
+            const email = document.getElementById("email").value
+            const password = document.getElementById("password").value
+            const phone = document.getElementById("phone").value
+            const aadhar = document.getElementById("aadhar").value
+            const voter = document.getElementById("voterid").value
+
+            try {
+
+                const res = await fetch("../backend/auth/register.php", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        phone,
+                        aadhar,
+                        voter_id: voter
+                    })
+
+                })
+
+                const data = await res.json()
+
+                alert(data.message)
+
+                if (data.status === "success") {
+                    window.location = "login.html"
+                }
+
+            } catch (err) {
+
+                alert("Server error. Check backend.")
+                console.log(err)
+
+            }
+
+        }
+    </script>
+
+</body>
+
+</html>

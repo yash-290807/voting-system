@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Election Officer Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Poppins;
+            background: #0f172a;
+            color: white;
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 220px;
+            background: #1e293b;
+            padding-top: 20px;
+        }
+        
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar button {
+            width: 90%;
+            margin: 10px;
+            padding: 10px;
+            background: #334155;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        
+        .sidebar button:hover {
+            background: #3b82f6;
+        }
+        
+        .main {
+            margin-left: 240px;
+            padding: 30px;
+        }
+        
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+        }
+        
+        .electionTitle {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+        
+        .candidateRow {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .candidateInfo {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .party {
+            color: #94a3b8;
+        }
+        
+        .voteInfo {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #cbd5f5;
+            margin-bottom: 6px;
+        }
+        
+        .progress {
+            background: #334155;
+            height: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .bar {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            height: 100%;
+        }
+        
+        .winner {
+            border-left: 4px solid #22c55e;
+            background: #0b1b2b;
+        }
+        
+        .deleteBtn {
+            background: red;
+            padding: 6px 10px;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <h2>Officer Panel</h2>
+
+        <button onclick="loadResults()">Live Results</button>
+
+        <button onclick="showPie()">Pie Chart</button>
+
+        <button onclick="loadCandidates()">Manage Candidates</button>
+
+        <button onclick="pauseElection()">Pause Election</button>
+
+        <button onclick="resumeElection()">Resume Election</button>
+
+        <button onclick="logout()">Logout</button>
+
+    </div>
+
+
+    <div class="main">
+
+        <h1>Election Officer Dashboard</h1>
+
+        <div id="content"></div>
+
+    </div>
+
+
+    <script>
+        /* LIVE RESULTS */
+
+        async function loadResults() {
+
+            const res = await fetch("../../backend/results/get_results.php")
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach(e => {
+
+                let totalVotes = 0
+
+                e.candidates.forEach(c => {
+                    totalVotes += parseInt(c.votes)
+                })
+
+                e.candidates.sort((a, b) => b.votes - a.votes)
+
+                html += `<div class="card">
+
+<h2 class="electionTitle">${e.title}</h2>
+
+<p>Total Votes: ${totalVotes}</p>
+`
+
+                e.candidates.forEach((c, index) => {
+
+                    let percent = totalVotes == 0 ? 0 : Math.round((c.votes / totalVotes) * 100)
+
+                    let winnerClass = index == 0 && c.votes > 0 ? "winner" : ""
+
+                    html += `
+
+<div class="candidateRow ${winnerClass}">
+
+<div class="candidateInfo">
+
+<span>${c.name}</span>
+
+<span class="party">${c.party}</span>
+
+</div>
+
+<div class="voteInfo">
+
+<span>${c.votes} votes</span>
+
+<span>${percent}%</span>
+
+</div>
+
+<div class="progress">
+
+<div class="bar" style="width:${percent}%"></div>
+
+</div>
+
+</div>
+
+`
+
+                })
+
+                html += `</div>`
+
+            })
+
+            document.getElementById("content").innerHTML = html
+
+        }
+
+
+        /* PIE CHART - FIXED VERSION */
+
+        async function showPie() {
+
+            const res = await fetch("../../backend/results/get_results.php")
+            const data = await res.json()
+
+            let html = ""
+
+            data.forEach((e, index) => {
+
+                let labels = []
+                let votes = []
+
+                e.candidates.forEach(c => {
+                    labels.push(c.name + " (" + c.party + ")")
+                    votes.push(c.votes)
+                })
+
+                html += `
+<div class="card">
+
+<h2>${e.title} - Vote Distribution</h2>
+
+<canvas id="pieChart${index}"></canvas>
+
+</div>
+`
+
+                setTimeout(() => {
+
+                    new Chart(document.getElementById("pieChart" + index), {
+
+                        type: "pie",
+
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: votes,
+                                backgroundColor: [
+                                    "#3b82f6",
+                                    "#22c55e",
+                                    "#f59e0b",
+                                    "#ef4444",
+                                    "#a855f7",
+                                    "#14b8a6"
+                                ]
+                            }]
+                        },
+
+                        options: {
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: "white"
+                                    }
+                                }
+                            }
+                        }
+
+                    })
+
+                }, 100)
+
+            })
+
+            document.getElementById("content").innerHTML = html
+
+        }
+
+
+        /* MANAGE CANDIDATES */
+
+        async function loadCandidates() {
+
+            const res = await fetch("../../backend/candidates/get_all_candidates.php")
+            const data = await res.json()
+
+            let html = `<div class="card"><h2>Manage Candidates</h2>`
+
+            data.forEach(c => {
+
+                html += `
+
+<div class="candidateRow">
+
+<b>${c.name}</b> (${c.party})
+
+<button class="deleteBtn" onclick="deleteCandidate(${c.id})">Delete</button>
+
+</div>
+
+`
+
+            })
+
+            html += `</div>`
+
+            document.getElementById("content").innerHTML = html
+
+        }
+
+
+        /* DELETE CANDIDATE */
+
+        async function deleteCandidate(id) {
+
+            if (!confirm("Delete candidate?")) return
+
+            await fetch("../../backend/candidates/delete_candidate.php", {
+
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id
+                })
+
+            })
+
+            loadCandidates()
+
+        }
+
+
+        /* PAUSE */
+
+        async function pauseElection() {
+
+            await fetch("../../backend/elections/pause.php")
+
+            alert("Election paused")
+
+        }
+
+
+        /* RESUME */
+
+        async function resumeElection() {
+
+            await fetch("../../backend/elections/resume.php")
+
+            alert("Election resumed")
+
+        }
+
+
+        /* LOGOUT */
+
+        function logout() {
+
+            localStorage.clear()
+
+            window.location = "../login.html"
+
+        }
+
+
+        /* AUTO LOAD */
+
+        loadResults()
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>Election Commissioner Dashboard</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #0b1a33;
+            color: white;
+            font-family: Arial;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        /* turnout stats */
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-box {
+            background: #142850;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+        }
+        
+        .stat-box h3 {
+            margin-bottom: 10px;
+        }
+        
+        .stat-box p {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        /* chart */
+        
+        canvas {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #e74a3b;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Election Commissioner Dashboard</h1>
+
+    <div class="container">
+
+        <!-- turnout statistics -->
+
+        <div class="stats">
+
+            <div class="stat-box">
+                <h3>Total Voters</h3>
+                <p id="totalUsers">0</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Total Votes</h3>
+                <p id="totalVotes">0</p>
+            </div>
+
+            <div class="stat-box">
+                <h3>Turnout</h3>
+                <p id="turnout">0%</p>
+            </div>
+
+        </div>
+
+        <h2>Live Voting Results</h2>
+
+        <canvas id="chart"></canvas>
+
+        <button onclick="logout()">Logout</button>
+
+    </div>
+
+    <script>
+        if (localStorage.getItem("role") !== "ec") {
+            alert("Access denied")
+            window.location = "login.html"
+        }
+
+        let chart;
+
+        /* load vote chart */
+
+        async function loadResults() {
+
+            const res = await fetch("../backend/voting/results.php")
+
+            const data = await res.json()
+
+            const names = []
+            const votes = []
+
+            data.forEach(c => {
+                names.push(c.name)
+                votes.push(Number(c.votes))
+            })
+
+            if (chart) {
+                chart.destroy()
+            }
+
+            const ctx = document.getElementById("chart").getContext("2d")
+
+            chart = new Chart(ctx, {
+
+                type: "bar",
+
+                data: {
+                    labels: names,
+                    datasets: [{
+                        label: "Votes",
+                        data: votes,
+                        backgroundColor: "#4e73df"
+                    }]
+                },
+
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+
+            })
+
+        }
+
+        /* load turnout stats */
+
+        async function loadTurnout() {
+
+            const res = await fetch("../backend/voting/turnout.php")
+
+            const data = await res.json()
+
+            document.getElementById("totalUsers").innerText = data.total_users
+            document.getElementById("totalVotes").innerText = data.total_votes
+            document.getElementById("turnout").innerText = data.turnout + "%"
+
+        }
+
+        function logout() {
+
+            localStorage.removeItem("role")
+
+            window.location = "login.html"
+
+        }
+
+        loadResults()
+        loadTurnout()
+
+        setInterval(loadResults, 5000)
+        setInterval(loadTurnout, 5000)
+    </script>
+
+</body>
+
+</html>
